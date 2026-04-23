@@ -400,8 +400,8 @@
   const BASE = window.location.hostname === 'localhost'
   ? 'http://localhost:8000'
   : window.location.hostname.includes('vercel.app') && window.location.hostname.includes('-git-')
-  ? 'https://dashboard.render.com/web/srv-d7krg2ugvqtc7384t8t0'
-  : 'https://dashboard.render.com/web/srv-d7krmmq8qa3s73fm3i2g';
+  ? 'https://auth-system-for-staging.onrender.com'
+  : 'https://auth-system-for-production.onrender.com';
 
   function switchTab(tab) {
     ['register','login'].forEach((t) => {
@@ -455,7 +455,7 @@
       document.getElementById('reg-s2').className = 'step-dot active';
       showRes('reg-res', 'OTP sent to your WhatsApp!', 'success');
     } catch(e) {
-      showRes('reg-res', 'Cannot connect to server. Make sure FastAPI is running on port 8000.', 'error');
+      showRes('reg-res', 'Cannot connect to server. Please check your connection.', 'error');
     } finally {
       setLoading('reg-btn', false, 'Continue →');
     }
@@ -478,7 +478,7 @@
       document.getElementById('reg-step2').style.display = 'none';
       document.getElementById('reg-s2').className = 'step-dot done';
     } catch(e) {
-      showRes('reg-res', 'Cannot connect to server. Make sure FastAPI is running on port 8000.', 'error');
+      showRes('reg-res', 'Cannot connect to server. Please check your connection.', 'error');
     } finally {
       setLoading('reg-verify-btn', false, 'Verify & Activate');
     }
@@ -517,7 +517,7 @@
         showRes('login-res', d.error || d.message, d.error ? 'error' : 'success');
       }
     } catch(e) {
-      showRes('login-res', 'Cannot connect to server. Make sure FastAPI is running on port 8000.', 'error');
+      showRes('login-res', 'Cannot connect to server. Please check your connection.', 'error');
     } finally {
       setLoading('login-btn', false, 'Sign In');
     }

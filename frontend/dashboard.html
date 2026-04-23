@@ -351,7 +351,11 @@
 </div>
 
 <script>
-  const BASE = "http://localhost:8000";
+  const BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : window.location.hostname.includes('vercel.app') && window.location.hostname.includes('-git-')
+  ? 'https://auth-system-for-staging.onrender.com'
+  : 'https://auth-system-for-production.onrender.com';
 
   // On page load — check token and load user
   window.addEventListener('DOMContentLoaded', async () => {
