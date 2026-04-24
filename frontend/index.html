@@ -248,25 +248,7 @@
 
 
   /* Step indicator */
-  .step-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.6rem; }
-  .step-dot {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 600;
-    border: 1px solid var(--border); color: var(--muted); flex-shrink: 0; transition: all 0.3s;
-  }
-  .step-dot.active { background: var(--accent); color: #04060f; border-color: var(--accent); }
-  .step-dot.done { background: var(--surface2); color: var(--accent); border-color: rgba(56,189,248,0.3); }
-  .step-line { flex: 1; height: 1px; background: var(--border); }
-  .otp-row { display: flex; gap: 8px; }
-  .otp-row input { flex: 1; }
-  .btn-sm {
-    padding: 11px 14px; font-size: 12px; white-space: nowrap; width: auto; margin-top: 0;
-    letter-spacing: 1px; background: transparent; border: 1px solid rgba(56,189,248,0.25);
-    color: var(--accent); border-radius: 10px; font-family: var(--font-display);
-    font-weight: 600; text-transform: uppercase; cursor: pointer; transition: background 0.2s;
-  }
-  .btn-sm:hover { background: rgba(56,189,248,0.08); }
+
 
   /* Divider */
   .divider {
@@ -331,11 +313,7 @@
     <div class="section active" id="register">
 
       <!-- Step indicator -->
-      <div class="step-row">
-        <div class="step-dot active" id="reg-s1">1</div>
-        <div class="step-line"></div>
-        <div class="step-dot" id="reg-s2">2</div>
-      </div>
+
 
       <!-- Step 1: Details -->
       <div id="reg-step1">
@@ -351,23 +329,10 @@
           <label>Password</label>
           <input type="password" id="reg-pass" placeholder="Create a password" autocomplete="new-password"/>
         </div>
-        <button class="btn" id="reg-btn" onclick="register()">Continue &rarr;</button>
+        <button class="btn" id="reg-btn" onclick="register()">Register Now &rarr;</button>
       </div>
 
-      <!-- Step 2: OTP Verify -->
-      <div id="reg-step2" style="display:none">
-        <div style="font-size:13px; color:var(--muted); margin-bottom:1.2rem; line-height:1.6;">
-          An OTP has been sent to your WhatsApp number. Enter it below to activate your account.
-        </div>
-        <div class="field">
-          <label>OTP Code</label>
-          <div class="otp-row">
-            <input type="text" id="reg-otp" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric"/>
-            <button class="btn-sm" onclick="resendRegOTP()">Resend</button>
-          </div>
-        </div>
-        <button class="btn" id="reg-verify-btn" onclick="verifyRegOTP()">Verify &amp; Activate</button>
-      </div>
+
 
       <div class="response" id="reg-res"></div>
       <div class="switch-link" style="margin-top:1.2rem">Already have an account? <a onclick="switchTab('login')">Sign in</a></div>
@@ -428,9 +393,8 @@
     const phone = document.getElementById('reg-phone').value.trim();
     const pass  = document.getElementById('reg-pass').value;
     if (!name || !phone || !pass) return showRes('reg-res', 'Please fill in all fields.', 'error');
-    setLoading('reg-btn', true, 'Continue →');
+    setLoading('reg-btn', true, 'Registering...');
     try {
-      // Step 1: Register the user
       const r = await fetch(BASE + '/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -439,61 +403,13 @@
       const d = await r.json();
       if (d.error) return showRes('reg-res', d.error, 'error');
 
-      // Step 2: Send OTP
-      const r2 = await fetch(BASE + '/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phone })
-      });
-      const d2 = await r2.json();
-      if (d2.error) return showRes('reg-res', d2.error, 'error');
-
-      // Show OTP step
-      document.getElementById('reg-step1').style.display = 'none';
-      document.getElementById('reg-step2').style.display = 'block';
-      document.getElementById('reg-s1').className = 'step-dot done';
-      document.getElementById('reg-s2').className = 'step-dot active';
-      showRes('reg-res', 'OTP sent to your WhatsApp!', 'success');
+      showRes('reg-res', 'Account created successfully! You can now sign in.', 'success');
+      setTimeout(() => switchTab('login'), 2000);
     } catch(e) {
       showRes('reg-res', 'Cannot connect to server. Please check your connection.', 'error');
     } finally {
-      setLoading('reg-btn', false, 'Continue →');
+      setLoading('reg-btn', false, 'Register Now →');
     }
-  }
-
-  async function verifyRegOTP() {
-    const phone = document.getElementById('reg-phone').value.trim();
-    const code  = document.getElementById('reg-otp').value.trim();
-    if (!code) return showRes('reg-res', 'Please enter the OTP.', 'error');
-    setLoading('reg-verify-btn', true, 'Verify & Activate');
-    try {
-      const r = await fetch(BASE + '/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phone, otp_code: code })
-      });
-      const d = await r.json();
-      if (d.error) return showRes('reg-res', d.error, 'error');
-      showRes('reg-res', 'Account verified! You can now sign in.', 'success');
-      document.getElementById('reg-step2').style.display = 'none';
-      document.getElementById('reg-s2').className = 'step-dot done';
-    } catch(e) {
-      showRes('reg-res', 'Cannot connect to server. Please check your connection.', 'error');
-    } finally {
-      setLoading('reg-verify-btn', false, 'Verify & Activate');
-    }
-  }
-
-  async function resendRegOTP() {
-    const phone = document.getElementById('reg-phone').value.trim();
-    try {
-      await fetch(BASE + '/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: phone })
-      });
-      showRes('reg-res', 'OTP resent to your WhatsApp!', 'success');
-    } catch(e) {}
   }
 
   async function login() {

@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 import bcrypt
-import random
-import requests
 import os
 
 load_dotenv()
@@ -56,14 +54,6 @@ class LoginUser(BaseModel):
     phone_number: str
     password: str
 
-class SendOTP(BaseModel):
-    phone_number: str
-
-class VerifyOTP(BaseModel):
-    phone_number: str
-    otp_code: str
-
-
 
 def create_token(data: dict) -> str:
     payload = data.copy()
@@ -103,7 +93,7 @@ def register(user: User):
 
     hashed = hash_password(user.password)
     cursor.execute(
-        "INSERT INTO users (customer_name, phone_number, password) VALUES (%s, %s, %s)",
+        "INSERT INTO users (customer_name, phone_number, password, is_verified) VALUES (%s, %s, %s, TRUE)",
         (user.customer_name, user.phone_number, hashed)
     )
     conn.commit()
@@ -131,8 +121,7 @@ def login(user: LoginUser):
     if not verify_password(user.password, existing_user["password"]):
         return {"error": "Wrong password! ❌"}
 
-    if not existing_user["is_verified"]:
-        return {"error": "Phone number not verified! Please verify your OTP first. ❌"}
+
 
     token = create_token({"phone": existing_user["phone_number"]})
 
@@ -148,66 +137,7 @@ def login(user: LoginUser):
     }
 
 
-@app.post("/send-otp")
-def send_otp(data: SendOTP):
-    otp_code = str(random.randint(100000, 999999))
-    expires_at = datetime.now() + timedelta(minutes=5)
 
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO otps (phone_number, otp_code, expires_at) VALUES (%s, %s, %s)",
-        (data.phone_number, otp_code, expires_at)
-    )
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    headers = {
-        "Authorization": f"Bearer {os.getenv('SYNXZAP_API_TOKEN')}",
-        "Content-Type": "application/json"
-    }
-    response = requests.post(
-        "https://api.synxzap.com/api/v1/messages/send-otp",
-        json={"phoneNumber": data.phone_number, "otp": otp_code},
-        headers=headers
-    )
-
-    if response.status_code == 200:
-        return {"message": "OTP sent successfully! ✅"}
-    else:
-        return {"error": "Failed to send OTP ❌", "details": response.json()}
-
-
-@app.post("/verify-otp")
-def verify_otp(data: VerifyOTP):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT * FROM otps
-        WHERE phone_number = %s
-        AND otp_code = %s
-        AND is_used = FALSE
-        AND expires_at > NOW()
-        ORDER BY created_at DESC
-        LIMIT 1
-    """, (data.phone_number, data.otp_code))
-
-    otp_record = cursor.fetchone()
-
-    if not otp_record:
-        cursor.close()
-        conn.close()
-        return {"error": "Invalid or expired OTP! ❌"}
-
-    cursor.execute("UPDATE otps SET is_used = TRUE WHERE id = %s", (otp_record["id"],))
-    cursor.execute("UPDATE users SET is_verified = TRUE WHERE phone_number = %s", (data.phone_number,))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return {"message": "Phone number verified successfully! ✅"}
 
 
 @app.get("/me")
