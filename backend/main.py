@@ -22,6 +22,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def root():
+    return {"message": "Synx AI Auth API is running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = 60
