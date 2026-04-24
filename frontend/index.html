@@ -247,8 +247,6 @@
 
 
 
-  /* Step indicator */
-
 
   /* Divider */
   .divider {
@@ -312,11 +310,9 @@
     <!-- ── REGISTER ── -->
     <div class="section active" id="register">
 
-      <!-- Step indicator -->
 
 
-      <!-- Step 1: Details -->
-      <div id="reg-step1">
+
         <div class="field">
           <label>Full Name</label>
           <input type="text" id="reg-name" placeholder="e.g. Arjun Kumar" autocomplete="name"/>
@@ -330,7 +326,7 @@
           <input type="password" id="reg-pass" placeholder="Create a password" autocomplete="new-password"/>
         </div>
         <button class="btn" id="reg-btn" onclick="register()">Register Now &rarr;</button>
-      </div>
+
 
 
 
@@ -408,7 +404,7 @@
     } catch(e) {
       showRes('reg-res', 'Cannot connect to server. Please check your connection.', 'error');
     } finally {
-      setLoading('reg-btn', false, 'Register Now →');
+      setLoading('reg-btn', false, 'Register Now &rarr;');
     }
   }
 
