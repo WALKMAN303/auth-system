@@ -50,3 +50,18 @@ jobs:
       - name: Run Tests
         working-directory: backend
         run: PYTHONPATH=. pytest
+
+  automerge:
+    name: Auto Merge
+    needs: [frontend, backend]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Auto-merge PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --auto --merge
