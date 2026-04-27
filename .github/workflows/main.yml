@@ -51,9 +51,38 @@ jobs:
         working-directory: backend
         run: PYTHONPATH=. pytest
 
+  e2e:
+    name: Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
   automerge:
     name: Auto PR & Merge
-    needs: [frontend, backend]
+    needs: [frontend, backend, e2e]
     if: github.event_name == 'push' && github.ref_name != 'main'
     runs-on: ubuntu-latest
     permissions:
